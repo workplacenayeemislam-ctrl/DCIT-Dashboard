@@ -1,0 +1,2086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DCIT Institute — Daily Report System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:       #185FA5;
+  --blue-light: #E6F1FB;
+  --blue-mid:   #378ADD;
+  --green:      #1D9E75;
+  --green-light:#E1F5EE;
+  --amber:      #BA7517;
+  --amber-light:#FAEEDA;
+  --red:        #A32D2D;
+  --red-light:  #FCEBEB;
+  --purple:     #7C3AED;
+  --purple-light:#F3E8FF;
+  --gray:       #5F5E5A;
+  --gray-light: #F1EFE8;
+  --bg:         #F7F6F2;
+  --surface:    #FFFFFF;
+  --border:     rgba(0,0,0,0.09);
+  --border-med: rgba(0,0,0,0.15);
+  --text:       #1A1917;
+  --text-2:     #5F5E5A;
+  --text-3:     #9B9A96;
+  --radius:     10px;
+  --radius-lg:  14px;
+  --shadow:     0 1px 3px rgba(0,0,0,0.07), 0 4px 12px rgba(0,0,0,0.04);
+  
+  /* CUSTOM ATTENDANCE COLORS */
+  --attend-present: #98FB98;
+  --attend-present-text: #155724;
+  --attend-absent: #DCDCDC;
+  --attend-absent-text: #383838;
+  --attend-late: #E0FFFF;
+  --attend-late-text: #006666;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 58px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-badge {
+  width: 36px; height: 36px;
+  background: var(--blue);
+  border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 13px; font-weight: 600; letter-spacing: 0.3px;
+}
+.brand-name { font-size: 15px; font-weight: 600; color: var(--text); }
+.brand-sub  { font-size: 11px; color: var(--text-3); margin-top: -2px; }
+
+.topnav { display: flex; gap: 2px; overflow-x: auto; }
+.topnav-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text-2);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.topnav-btn:hover { background: var(--bg); color: var(--text); }
+.topnav-btn.active { background: var(--blue-light); color: var(--blue); font-weight: 500; }
+
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+.date-badge {
+  font-size: 12px; color: var(--text-2);
+  background: var(--bg);
+  padding: 5px 11px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  font-family: 'DM Mono', monospace;
+}
+
+/* ── LAYOUT ── */
+.layout { display: flex; min-height: calc(100vh - 58px); }
+
+.sidebar {
+  width: 210px;
+  min-width: 210px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 16px 10px;
+  position: sticky;
+  top: 58px;
+  height: calc(100vh - 58px);
+  overflow-y: auto;
+}
+.sidebar-group { margin-bottom: 22px; }
+.sidebar-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-3);
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  padding: 0 10px;
+  margin-bottom: 5px;
+}
+.sidebar-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-2);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-family: 'DM Sans', sans-serif;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+.sidebar-item i { font-size: 15px; width: 18px; text-align: center; }
+.sidebar-item:hover { background: var(--bg); color: var(--text); }
+.sidebar-item.active { background: var(--blue-light); color: var(--blue); font-weight: 500; }
+
+.content { flex: 1; padding: 24px; overflow-y: auto; }
+
+/* ── PAGES ── */
+.page { display: none; }
+.page.active { display: block; }
+
+.page-header { margin-bottom: 22px; }
+.page-title { font-size: 20px; font-weight: 600; color: var(--text); }
+.page-sub { font-size: 13px; color: var(--text-2); margin-top: 3px; }
+
+/* ── METRIC CARDS ── */
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.metric-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--accent, var(--blue));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+.metric-label { font-size: 11px; color: var(--text-2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px; }
+.metric-value { font-size: 26px; font-weight: 600; color: var(--text); line-height: 1; }
+.metric-sub { font-size: 11px; color: var(--text-3); margin-top: 6px; }
+.metric-up   { color: var(--green); }
+.metric-down { color: var(--red); }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  margin-bottom: 18px;
+}
+.card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* ── DEPARTMENT GRID ── */
+.dept-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.dept-card {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.dept-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+.dept-card.active { border-color: var(--blue); background: var(--blue-light); }
+.dept-icon { font-size: 24px; margin-bottom: 8px; }
+.dept-name { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+.dept-count { font-size: 20px; font-weight: 700; color: var(--blue); }
+.dept-input {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid var(--border-med);
+  border-radius: 6px;
+  font-size: 12px;
+  text-align: center;
+  margin-top: 6px;
+}
+
+/* ── FORM ELEMENTS ── */
+.form-group { margin-bottom: 14px; }
+.form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 5px; }
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border-med);
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(24,95,165,0.1);
+}
+.form-textarea { resize: vertical; min-height: 90px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+.btn-primary { background: var(--blue); color: #fff; }
+.btn-primary:hover { background: #0C447C; }
+.btn-secondary { background: var(--bg); color: var(--text-2); border: 1px solid var(--border-med); }
+.btn-secondary:hover { background: #e8e6e0; }
+.btn-success { background: var(--green); color: #fff; }
+.btn-success:hover { background: #0F6E56; }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover { background: #7a1f1f; }
+.btn-row { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 8px; }
+
+/* ── BADGES ── */
+.badge {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-green  { background: var(--green-light); color: #085041; }
+.badge-amber  { background: var(--amber-light); color: #633806; }
+.badge-red    { background: var(--red-light);   color: #501313; }
+.badge-blue   { background: var(--blue-light);  color: #042C53; }
+.badge-gray   { background: var(--gray-light);  color: #2C2C2A; }
+.badge-purple { background: var(--purple-light); color: #5B21B6; }
+
+/* ── TABLE ── */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  text-align: left;
+  padding: 9px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  background: var(--bg);
+}
+tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--bg); }
+
+/* ── ATTENDANCE GRID ── */
+.attend-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 9px; }
+.attend-cell {
+  border: 2px solid transparent;
+  border-radius: 9px;
+  padding: 10px 7px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.attend-cell:hover { transform: translateY(-1px); box-shadow: var(--shadow); }
+
+/* CUSTOM ATTENDANCE COLORS */
+.attend-cell.present { 
+  background: var(--attend-present); 
+  border-color: #2d8a2d;
+}
+.attend-cell.late    { 
+  background: var(--attend-late); 
+  border-color: #006666;
+}
+.attend-cell.absent  { 
+  background: var(--attend-absent); 
+  border-color: #606060;
+}
+
+.attend-name   { font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.attend-time   { font-size: 9px; color: var(--text); margin: 3px 0; font-family: 'DM Mono', monospace; font-weight: 500; }
+.attend-reason { font-size: 9px; color: var(--text); margin-top: 3px; }
+.attend-status { font-size: 10px; color: var(--text); text-transform: capitalize; font-weight: 600; }
+
+/* ── MODAL ── */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.5);
+}
+.modal.show { display: flex; align-items: center; justify-content: center; }
+.modal-content {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+.modal-header { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+.modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-2); }
+
+/* ── CEO TABS ── */
+.tab-bar {
+  display: flex; gap: 2px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+.tab-btn {
+  padding: 9px 18px;
+  border: none;
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text-2);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 0.15s;
+}
+.tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+
+/* ── INSIGHT ROWS ── */
+.insight-row {
+  display: flex; align-items: flex-start; gap: 11px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.insight-row:last-child { border-bottom: none; }
+.insight-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-size: 15px;
+}
+.insight-text { font-size: 13px; color: var(--text); line-height: 1.5; }
+.insight-time { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+/* ── CONNECTION SETUP BOX ── */
+.setup-box {
+  background: #FFF8E6;
+  border: 1px solid #F5C842;
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.setup-box i { color: #BA7517; font-size: 18px; margin-top: 1px; flex-shrink: 0; }
+.setup-box-text { font-size: 13px; color: #633806; }
+.setup-box-text strong { font-weight: 600; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 24px; right: 24px;
+  padding: 11px 18px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex; align-items: center; gap: 9px;
+  z-index: 9999;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  transform: translateY(80px);
+  opacity: 0;
+  transition: all 0.25s ease;
+  pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { background: #085041; color: #9FE1CB; }
+.toast.error   { background: #501313; color: #F7C1C1; }
+.toast.info    { background: #042C53; color: #B5D4F4; }
+
+/* ── SPINNER ── */
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* ── CHART CONTAINER ── */
+.chart-box { position: relative; width: 100%; }
+
+/* ── TASK CARD ── */
+.task-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 10px;
+}
+.task-info { flex: 1; }
+.task-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.task-assigned { font-size: 12px; color: var(--text-2); margin: 3px 0; }
+.task-links { font-size: 11px; margin-top: 6px; }
+.task-link-btn {
+  display: inline-block;
+  padding: 4px 8px;
+  margin-right: 5px;
+  background: var(--blue-light);
+  color: var(--blue);
+  border-radius: 5px;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.task-link-btn:hover { background: var(--blue); color: #fff; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .two-col, .three-col { grid-template-columns: 1fr; }
+  .topnav { display: none; }
+  .dept-grid { grid-template-columns: repeat(2, 1fr); }
+  .modal-content { width: 95%; }
+}
+
+/* ══════════════════════════════════════
+   LOGIN / ROLE SYSTEM
+══════════════════════════════════════ */
+#login-screen {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, #0D3A6B 0%, #185FA5 55%, #0F6E56 100%);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 99999;
+}
+.login-box {
+  background: #fff; border-radius: 20px;
+  padding: 40px 36px; width: 390px; max-width: 92vw;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.28); text-align: center;
+}
+.login-logo {
+  width: 58px; height: 58px; background: var(--blue);
+  border-radius: 14px; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-size: 18px; font-weight: 700;
+  margin: 0 auto 14px; letter-spacing: 0.5px;
+}
+.login-title { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+.login-sub   { font-size: 13px; color: var(--text-2); margin-bottom: 26px; }
+.role-tabs {
+  display: flex; gap: 5px;
+  background: var(--bg); border-radius: 10px;
+  padding: 4px; margin-bottom: 22px;
+}
+.role-tab {
+  flex: 1; padding: 8px 6px; border-radius: 7px; border: none;
+  font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.15s; color: var(--text-2); background: transparent;
+}
+.role-tab.active { background: #fff; color: var(--blue); box-shadow: 0 1px 5px rgba(0,0,0,0.12); }
+.login-field { text-align: left; margin-bottom: 13px; }
+.login-field label { display: block; font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 5px; }
+.login-field input {
+  width: 100%; padding: 10px 13px;
+  border: 1.5px solid var(--border-med); border-radius: 9px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text);
+  background: var(--bg); transition: all 0.15s;
+}
+.login-field input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(24,95,165,0.12); background: #fff; }
+.login-btn {
+  width: 100%; padding: 11px; background: var(--blue); color: #fff;
+  border: none; border-radius: 9px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all 0.15s; margin-top: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.login-btn:hover { background: #0C447C; }
+.login-error {
+  background: var(--red-light); color: var(--red);
+  border-radius: 8px; padding: 9px 12px; font-size: 13px;
+  margin-top: 12px; display: none;
+}
+.login-error.show { display: block; }
+
+/* Topbar role info */
+.role-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px; border-radius: 7px;
+  font-size: 12px; font-weight: 600; border: 1px solid var(--border);
+}
+.role-badge.admin    { background: #EDE9FE; color: #5B21B6; border-color: #C4B5FD; }
+.role-badge.employee { background: var(--green-light); color: #085041; border-color: #6EE7B7; }
+.logout-btn {
+  padding: 5px 11px; border-radius: 7px;
+  border: 1px solid var(--border-med); background: transparent;
+  font-family: 'DM Sans', sans-serif; font-size: 12px; color: var(--text-2);
+  cursor: pointer; display: flex; align-items: center; gap: 5px; transition: all 0.15s;
+}
+.logout-btn:hover { background: var(--red-light); color: var(--red); border-color: var(--red); }
+
+/* Admin-only controls */
+.admin-only       { display: none !important; }
+.admin-only-block { display: none !important; }
+body.is-admin .admin-only       { display: flex !important; }
+body.is-admin .admin-only-block { display: block !important; }
+body.is-admin .admin-only-inline { display: inline-flex !important; }
+.admin-only-inline { display: none !important; }
+
+/* Lock overlay for employee on restricted pages */
+.emp-locked {
+  position: relative; pointer-events: none;
+}
+.emp-lock-overlay {
+  display: none;
+  position: absolute; inset: 0; z-index: 20;
+  background: rgba(247,246,242,0.82); border-radius: var(--radius-lg);
+  align-items: center; justify-content: center; backdrop-filter: blur(2px);
+}
+.emp-lock-overlay.show { display: flex; }
+.emp-lock-msg {
+  background: #fff; padding: 16px 22px; border-radius: 12px;
+  border: 1px solid var(--border-med); text-align: center;
+  box-shadow: var(--shadow);
+}
+.emp-lock-msg i { font-size: 22px; color: var(--amber); margin-bottom: 8px; display: block; }
+.emp-lock-msg p { font-size: 13px; color: var(--text-2); }
+.emp-lock-msg strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">DCIT</div>
+    <div class="login-title">DCIT Institute</div>
+    <div class="login-sub">Daily Report System — Please sign in</div>
+
+    <!-- Role selector -->
+    <div class="role-tabs">
+      <button class="role-tab active" onclick="selectRole('admin')" id="rtab-admin">
+        <i class="fa fa-shield-halved"></i> Admin
+      </button>
+      <button class="role-tab" onclick="selectRole('employee')" id="rtab-employee">
+        <i class="fa fa-user"></i> Employee
+      </button>
+    </div>
+
+    <!-- Admin fields -->
+    <div id="login-admin-fields">
+      <div class="login-field">
+        <label>Username</label>
+        <input type="text" id="login-username" placeholder="admin" autocomplete="username" />
+      </div>
+      <div class="login-field">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"
+               onkeydown="if(event.key==='Enter') doLogin()" />
+      </div>
+    </div>
+
+    <!-- Employee fields -->
+    <div id="login-emp-fields" style="display:none;">
+      <div class="login-field">
+        <label>Your Full Name</label>
+        <input type="text" id="login-emp-name" placeholder="Enter your name" autocomplete="name"
+               onkeydown="if(event.key==='Enter') doLogin()" />
+      </div>
+      <div class="login-field">
+        <label>Employee PIN</label>
+        <input type="password" id="login-emp-pin" placeholder="••••" maxlength="6"
+               onkeydown="if(event.key==='Enter') doLogin()" />
+      </div>
+    </div>
+
+    <button class="login-btn" onclick="doLogin()">
+      <i class="fa fa-right-to-bracket"></i> Sign In
+    </button>
+    <div class="login-error" id="login-error">Incorrect credentials. Please try again.</div>
+
+    <div style="margin-top:18px;font-size:11px;color:#9B9A96;">DCIT Institute &copy; 2026</div>
+  </div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-badge">DCIT</div>
+    <div>
+      <div class="brand-name">DCIT Institute</div>
+      <div class="brand-sub">Daily Report System</div>
+    </div>
+  </div>
+  <nav class="topnav">
+    <button class="topnav-btn active" onclick="gotoPage('dashboard')"><i class="fa fa-chart-pie"></i> Dashboard</button>
+    <button class="topnav-btn" onclick="gotoPage('submit')"><i class="fa fa-file-circle-plus"></i> Submit Report</button>
+    <button class="topnav-btn admin-only" onclick="gotoPage('attendance')"><i class="fa fa-users"></i> Attendance</button>
+    <button class="topnav-btn" onclick="gotoPage('tasks')"><i class="fa fa-tasks"></i> Today's Tasks</button>
+    <button class="topnav-btn admin-only" onclick="gotoPage('ceo')"><i class="fa fa-chart-line"></i> CEO View</button>
+  </nav>
+  <div class="topbar-right">
+    <div class="date-badge" id="topbar-date"></div>
+    <div class="role-badge admin" id="topbar-role" style="display:none;"></div>
+    <button class="logout-btn" id="logout-btn" style="display:none;" onclick="doLogout()">
+      <i class="fa fa-right-from-bracket"></i> Logout
+    </button>
+  </div>
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">Submit</div>
+      <button class="sidebar-item active" id="side-dashboard" onclick="gotoPage('dashboard')"><i class="fa fa-chart-pie"></i> Overview</button>
+      <button class="sidebar-item" id="side-submit" onclick="gotoPage('submit')"><i class="fa fa-file-circle-plus"></i> Daily Report</button>
+      <button class="sidebar-item admin-only" id="side-attendance" onclick="gotoPage('attendance')"><i class="fa fa-calendar-check"></i> Attendance</button>
+      <button class="sidebar-item" id="side-tasks" onclick="gotoPage('tasks')"><i class="fa fa-tasks"></i> Today's Tasks</button>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-group-label">View</div>
+      <button class="sidebar-item admin-only" id="side-history" onclick="gotoPage('history')"><i class="fa fa-clock-rotate-left"></i> History</button>
+      <button class="sidebar-item admin-only" id="side-ceo" onclick="gotoPage('ceo')"><i class="fa fa-chart-line"></i> CEO Dashboard</button>
+    </div>
+    <div class="sidebar-group admin-only-block">
+      <div class="sidebar-group-label">Admin</div>
+      <button class="sidebar-item admin-only" onclick="gotoPage('settings')"><i class="fa fa-gear"></i> Connection Setup</button>
+      <button class="sidebar-item admin-only" onclick="openManageUsers()"><i class="fa fa-users-gear"></i> Manage Users</button>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- PAGE: DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Today's Overview</div>
+        <div class="page-sub" id="dash-date-label"></div>
+      </div>
+
+      <div class="metric-row">
+        <div class="metric-card" style="--accent: var(--blue);">
+          <div class="metric-label">Students Present</div>
+          <div class="metric-value" id="m-students">0</div>
+          <div class="metric-sub">Total across all departments</div>
+        </div>
+        <div class="metric-card" style="--accent: var(--green);">
+          <div class="metric-label">Reports Submitted</div>
+          <div class="metric-value" id="m-reports">0</div>
+          <div class="metric-sub">Today</div>
+        </div>
+        <div class="metric-card" style="--accent: var(--amber);">
+          <div class="metric-label">Staff Present</div>
+          <div class="metric-value" id="m-staff">0/21</div>
+          <div class="metric-sub" id="staff-percentage">0% attendance</div>
+        </div>
+        <div class="metric-card" style="--accent: var(--purple);">
+          <div class="metric-label">Active Tasks</div>
+          <div class="metric-value" id="m-tasks">0</div>
+          <div class="metric-sub">Today</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Students by Department — Today</div></div>
+        <div class="dept-grid" id="dept-grid-dashboard"></div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Work Categories — Today</div></div>
+          <div id="work-summary"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Recent Activity</div></div>
+          <div id="activity-feed"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: SUBMIT REPORT -->
+    <div class="page" id="page-submit">
+      <div class="page-header">
+        <div class="page-title">Submit Daily Report</div>
+        <div class="page-sub">Fill in your work summary. Submitting saves directly to Google Sheets.</div>
+      </div>
+
+      <div id="submit-connect-warn" class="setup-box" style="display:none;">
+        <i class="fa fa-triangle-exclamation"></i>
+        <div class="setup-box-text">
+          <strong>Google Sheets not connected yet.</strong> Your report will be saved locally only.
+          Go to <strong>Settings</strong> to add your Web App URL.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fa fa-user"></i> &nbsp;Employee Info</div></div>
+        <div class="two-col">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input class="form-input" type="text" id="emp-name" placeholder="Your full name" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Role / Department</label>
+            <select class="form-select" id="emp-role">
+              <option>Student Coordinator</option>
+              <option>Executive Officer</option>
+              <option>Social Media Manager</option>
+              <option>Junior Executive Officer</option>
+              <option>Office HR Admin</option>
+              <option>CEO</option>
+              <option>Accountant</option>
+              <option>COO</option>
+              <option>Managing Director</option>
+            </select>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="form-group">
+            <label class="form-label">Date *</label>
+            <input class="form-input" type="date" id="rep-date" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Shift</label>
+            <select class="form-select" id="emp-shift">
+              <option>Morning (8AM–2PM)</option>
+              <option>Afternoon (2PM–8PM)</option>
+              <option>Full Day</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fa fa-handshake"></i> &nbsp;Assigned Employee</div></div>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:12px;">If you're doing work assigned by a senior/co-worker, enter their details below:</p>
+        <div class="two-col">
+          <div class="form-group">
+            <label class="form-label">Assigned By (Name)</label>
+            <input class="form-input" type="text" id="assigned-by" placeholder="Leave blank if this is your own work" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Assigned By (Role)</label>
+            <input class="form-input" type="text" id="assigned-by-role" placeholder="Their role/position" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Assignment Notes</label>
+          <textarea class="form-textarea" id="assignment-notes" placeholder="What project/task were you assigned?" style="min-height:60px;"></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fa fa-list-check"></i> &nbsp;Work Categories</div></div>
+        <div class="two-col">
+          <div class="form-group">
+            <label class="form-label">Student Communication (no. of students contacted)</label>
+            <input class="form-input" type="number" id="w-student" placeholder="0" min="0" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">F-Commerce (orders / posts / replies)</label>
+            <input class="form-input" type="number" id="w-fcommerce" placeholder="0" min="0" />
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="form-group">
+            <label class="form-label">Social Communication (posts / messages)</label>
+            <input class="form-input" type="number" id="w-social" placeholder="0" min="0" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Online Form Submissions</label>
+            <input class="form-input" type="number" id="w-forms" placeholder="0" min="0" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Office Miscellaneous (describe)</label>
+          <input class="form-input" type="text" id="w-misc" placeholder="Any other office tasks done today" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Detailed Notes / Summary</label>
+          <textarea class="form-textarea" id="w-notes" placeholder="Brief summary of today's work, challenges, student feedback, wins..."></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fa fa-flag"></i> &nbsp;Status & Next Steps</div></div>
+        <div class="two-col">
+          <div class="form-group">
+            <label class="form-label">Today's overall progress</label>
+            <select class="form-select" id="rep-status">
+              <option>Completed</option>
+              <option>In Progress</option>
+              <option>Delayed</option>
+              <option>Blocked</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priority for tomorrow</label>
+            <input class="form-input" type="text" id="rep-tomorrow" placeholder="Key focus area for tomorrow" />
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="submit-btn" onclick="submitReport()">
+            <i class="fa fa-paper-plane"></i> Submit Report
+          </button>
+          <button class="btn btn-secondary" onclick="clearForm()">
+            <i class="fa fa-rotate-left"></i> Clear Form
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: ATTENDANCE -->
+    <div class="page" id="page-attendance">
+      <div class="page-header">
+        <div class="page-title">Attendance Tracker</div>
+        <div class="page-sub">Click each staff member to toggle status and enter arrival time / absence reason.</div>
+      </div>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Staff Attendance</div>
+            <span class="badge badge-green" id="staff-count-badge">0 / 21 present</span>
+          </div>
+          <div class="attend-grid" id="staff-grid"></div>
+          <div class="divider"></div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input class="form-input" type="date" id="att-date" />
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" id="att-save-btn" onclick="saveAttendance()">
+              <i class="fa fa-floppy-disk"></i> Save to Google Sheet
+            </button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title">Student Count by Department</div></div>
+          <div class="dept-grid" id="dept-grid-attendance"></div>
+          <div class="divider"></div>
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input class="form-input" type="date" id="stu-date" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Batch / Class</label>
+            <select class="form-select" id="stu-batch">
+              <option>Batch A — Morning</option>
+              <option>Batch B — Afternoon</option>
+              <option>All Batches</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Remarks</label>
+            <textarea class="form-textarea" id="stu-remarks" placeholder="Notes about student attendance..." style="min-height:60px;"></textarea>
+          </div>
+          <button class="btn btn-success" onclick="saveStudentCount()">
+            <i class="fa fa-paper-plane"></i> Submit Student Counts
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: TODAY'S TASKS -->
+    <div class="page" id="page-tasks">
+      <div class="page-header">
+        <div class="page-title">Today's Tasks Dashboard</div>
+        <div class="page-sub">Collaborative task board. Anyone can view. Only admins & creators can edit.</div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Active Tasks Today</div>
+          <button class="btn btn-primary" onclick="openCreateTaskModal()" id="create-task-btn">
+            <i class="fa fa-plus"></i> New Task
+          </button>
+        </div>
+        <div id="tasks-container"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Share This Dashboard</div></div>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:12px;">Share the link below so others can see today's tasks:</p>
+        <div class="form-group">
+          <input class="form-input" type="text" id="share-link" readonly value="" style="background:var(--bg);cursor:pointer;" onclick="this.select(); document.execCommand('copy');" />
+          <small style="color:var(--text-3);margin-top:4px;display:block;">Click to copy link</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: HISTORY -->
+    <div class="page" id="page-history">
+      <div class="page-header">
+        <div class="page-title">Report History</div>
+        <div class="page-sub">All submitted daily reports. Saved locally — also synced to Google Sheets.</div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">Submitted Reports</div>
+          <input class="form-input" type="text" id="history-search" placeholder="Search by name..." style="width:180px;" oninput="filterHistory()" />
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th><th>Employee</th><th>Role</th><th>Assigned By</th>
+                <th>Students</th><th>F-Com</th><th>Social</th><th>Forms</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody">
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: CEO VIEW -->
+    <div class="page" id="page-ceo">
+      <div class="page-header">
+        <div class="page-title">CEO Dashboard — DCIT Institute</div>
+        <div class="page-sub">Executive overview: Daily, Weekly, Monthly performance</div>
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tab-daily" onclick="switchCeoTab('daily')">Daily</button>
+        <button class="tab-btn" id="tab-weekly" onclick="switchCeoTab('weekly')">Weekly</button>
+        <button class="tab-btn" id="tab-monthly" onclick="switchCeoTab('monthly')">Monthly</button>
+      </div>
+
+      <!-- DAILY -->
+      <div id="ceo-daily">
+        <div class="metric-row">
+          <div class="metric-card" style="--accent:var(--blue);">
+            <div class="metric-label">Students Today</div>
+            <div class="metric-value" id="ceo-students">0</div>
+            <div class="metric-sub">Across all departments</div>
+          </div>
+          <div class="metric-card" style="--accent:var(--green);">
+            <div class="metric-label">Staff Present</div>
+            <div class="metric-value" id="ceo-staff">0/21</div>
+            <div class="metric-sub" id="ceo-staff-pct">0%</div>
+          </div>
+          <div class="metric-card" style="--accent:var(--amber);">
+            <div class="metric-label">Reports Today</div>
+            <div class="metric-value" id="ceo-reports">0</div>
+            <div class="metric-sub">Submitted</div>
+          </div>
+          <div class="metric-card" style="--accent:var(--purple);">
+            <div class="metric-label">Active Tasks</div>
+            <div class="metric-value" id="ceo-tasks">0</div>
+            <div class="metric-sub">In Progress</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><div class="card-title">Students by Department</div></div>
+            <div class="chart-box" style="height:200px;">
+              <canvas id="chart-dept-bar" role="img" aria-label="Bar chart of students by department"></canvas>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Key Highlights</div></div>
+            <div id="ceo-highlights"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WEEKLY -->
+      <div id="ceo-weekly" style="display:none;">
+        <div class="metric-row">
+          <div class="metric-card" style="--accent:var(--blue);"><div class="metric-label">Avg. Students/Day</div><div class="metric-value">0</div><div class="metric-sub">This week</div></div>
+          <div class="metric-card" style="--accent:var(--green);"><div class="metric-label">Reports This Week</div><div class="metric-value">0</div><div class="metric-sub">Mon–today</div></div>
+          <div class="metric-card" style="--accent:var(--amber);"><div class="metric-label">Staff Attendance</div><div class="metric-value">0%</div><div class="metric-sub">Avg</div></div>
+          <div class="metric-card" style="--accent:var(--purple);"><div class="metric-label">Tasks Completed</div><div class="metric-value">0</div><div class="metric-sub">This week</div></div>
+        </div>
+      </div>
+
+      <!-- MONTHLY -->
+      <div id="ceo-monthly" style="display:none;">
+        <div class="metric-row">
+          <div class="metric-card" style="--accent:var(--blue);"><div class="metric-label">Students Served</div><div class="metric-value">0</div><div class="metric-sub">This month</div></div>
+          <div class="metric-card" style="--accent:var(--green);"><div class="metric-label">Reports Filed</div><div class="metric-value">0</div><div class="metric-sub">This month</div></div>
+          <div class="metric-card" style="--accent:var(--amber);"><div class="metric-label">Avg Staff Attend.</div><div class="metric-value">0%</div><div class="metric-sub">Avg</div></div>
+          <div class="metric-card" style="--accent:var(--purple);"><div class="metric-label">Tasks Completed</div><div class="metric-value">0</div><div class="metric-sub">This month</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title"><i class="fa fa-table"></i> &nbsp;Open Full Data</div></div>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:14px;">All reports live in your Google Sheet. Share the link below with your CEO Sir for read-only live access.</p>
+        <div class="btn-row">
+          <button class="btn btn-secondary" onclick="openGoogleSheet()"><i class="fa fa-arrow-up-right-from-square"></i> Open Google Sheet</button>
+          <button class="btn btn-secondary" onclick="exportCSV()"><i class="fa fa-download"></i> Export as CSV</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE: SETTINGS -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">Connection Setup</div>
+        <div class="page-sub">Connect this dashboard to your Google Sheets Web App.</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Step 1 — Paste your Web App URL</div></div>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:12px;">
+          After deploying your Google Apps Script as a Web App, copy the URL and paste it below. All form submissions will then go directly to your Google Sheet.
+        </p>
+        <div class="form-group">
+          <label class="form-label">Google Apps Script Web App URL</label>
+          <input class="form-input" type="url" id="settings-url" placeholder="https://script.google.com/macros/s/YOUR_ID_HERE/exec" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Admin/Creator Email (for tasks & settings)</label>
+          <input class="form-input" type="email" id="settings-admin-email" placeholder="admin@dcitinstitute.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">CEO Email (for daily summary)</label>
+          <input class="form-input" type="email" id="settings-email" placeholder="ceo@dcitinstitute.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Google Sheet URL (for direct link)</label>
+          <input class="form-input" type="url" id="settings-sheet" placeholder="https://docs.google.com/spreadsheets/d/..." />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password for Creating Tasks</label>
+          <input class="form-input" type="password" id="settings-task-password" placeholder="Default: 123456" />
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="saveSettings()"><i class="fa fa-floppy-disk"></i> Save Settings</button>
+          <button class="btn btn-secondary" onclick="testConnection()"><i class="fa fa-plug"></i> Test Connection</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Attendance Status Colors</div></div>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;">Current custom colors for staff attendance indicators:</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+          <div>
+            <label class="form-label">Present Status</label>
+            <div style="background:#98FB98;border:2px solid #2d8a2d;border-radius:8px;padding:20px;text-align:center;font-weight:600;color:#155724;">
+              Present<br><small style="font-size:10px;color:#000;">#98FB98</small>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">Absent Status</label>
+            <div style="background:#DCDCDC;border:2px solid #606060;border-radius:8px;padding:20px;text-align:center;font-weight:600;color:#383838;">
+              Absent<br><small style="font-size:10px;color:#000;">#DCDCDC</small>
+            </div>
+          </div>
+          <div>
+            <label class="form-label">Late Status</label>
+            <div style="background:#E0FFFF;border:2px solid #006666;border-radius:8px;padding:20px;text-align:center;font-weight:600;color:#006666;">
+              Late<br><small style="font-size:10px;color:#000;">#E0FFFF</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">How to get your Web App URL</div></div>
+        <ol style="font-size:13px;color:var(--text-2);line-height:2;padding-left:18px;">
+          <li>Open your Google Sheet</li>
+          <li>Click <strong style="color:var(--text);">Extensions → Apps Script</strong></li>
+          <li>Paste the <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px;">DCIT_Apps_Script.gs</code> code and save</li>
+          <li>Run the <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px;">setup()</code> function once</li>
+          <li>Click <strong style="color:var(--text);">Deploy → New Deployment</strong></li>
+          <li>Type: <strong style="color:var(--text);">Web App</strong> · Execute as: <strong style="color:var(--text);">Me</strong> · Access: <strong style="color:var(--text);">Anyone</strong></li>
+          <li>Click <strong style="color:var(--text);">Deploy</strong> → copy the URL → paste above</li>
+        </ol>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TASK CREATION MODAL -->
+<div class="modal" id="taskModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>Create New Task</span>
+      <button class="modal-close" onclick="closeCreateTaskModal()"><i class="fa fa-xmark"></i></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password *</label>
+      <input class="form-input" type="password" id="task-password" placeholder="Enter password to create task" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Task Title *</label>
+      <input class="form-input" type="text" id="task-title" placeholder="What needs to be done?" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Assigned To</label>
+      <input class="form-input" type="text" id="task-assigned-to" placeholder="Person's name (optional)" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Google Form Link</label>
+      <input class="form-input" type="url" id="task-form-link" placeholder="https://forms.google.com/..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Website Link</label>
+      <input class="form-input" type="url" id="task-website-link" placeholder="https://example.com" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Google Drive Link</label>
+      <input class="form-input" type="url" id="task-drive-link" placeholder="https://drive.google.com/..." />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="task-description" placeholder="Task details..." style="min-height:80px;"></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="createTask()"><i class="fa fa-plus"></i> Create Task</button>
+      <button class="btn btn-secondary" onclick="closeCreateTaskModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- STAFF DETAIL MODAL -->
+<div class="modal" id="staffModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span id="staffModalTitle">Update Staff Status</span>
+      <button class="modal-close" onclick="closeStaffModal()"><i class="fa fa-xmark"></i></button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status *</label>
+      <select class="form-select" id="staffStatus">
+        <option value="present">Present</option>
+        <option value="late">Late</option>
+        <option value="absent">Absent</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Arrival Time (if Present or Late)</label>
+      <input class="form-input" type="time" id="staffTime" />
+    </div>
+    <div class="form-group" id="absenceReasonGroup" style="display:none;">
+      <label class="form-label">Reason for Absence</label>
+      <select class="form-select" id="absenceReason">
+        <option>Official Leave</option>
+        <option>Sickness</option>
+        <option>No Response</option>
+        <option>Urgent Leave</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveStaffModal()"><i class="fa fa-save"></i> Save</button>
+      <button class="btn btn-secondary" onclick="closeStaffModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGE USERS MODAL (Admin only) -->
+<div class="modal" id="manageUsersModal">
+  <div class="modal-content" style="max-width:520px;">
+    <div class="modal-header">
+      <span><i class="fa fa-users-gear"></i> &nbsp;Manage Users</span>
+      <button class="modal-close" onclick="closeManageUsers()"><i class="fa fa-xmark"></i></button>
+    </div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;">
+      Set login credentials for Admin and Employee accounts. Changes are saved locally.
+    </p>
+
+    <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px;">
+        <i class="fa fa-shield-halved" style="color:#7C3AED;"></i> &nbsp;Admin Credentials
+      </div>
+      <div class="two-col">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Username</label>
+          <input class="form-input" type="text" id="mu-admin-user" placeholder="admin" />
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" id="mu-admin-pass" placeholder="••••••••" />
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--bg);border-radius:10px;padding:14px;margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:10px;">
+        <i class="fa fa-users" style="color:var(--green);"></i> &nbsp;Employee PIN
+        <span style="font-weight:400;color:var(--text-2);"> — shared by all employees</span>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Employee PIN (4–6 digits)</label>
+        <input class="form-input" type="password" id="mu-emp-pin" placeholder="e.g. 1234" maxlength="6" />
+      </div>
+    </div>
+
+    <div style="background:#FFF8E6;border:1px solid #F5C842;border-radius:10px;padding:12px;margin-bottom:16px;font-size:12px;color:#633806;">
+      <i class="fa fa-triangle-exclamation"></i> &nbsp;
+      Share the Employee PIN only with your staff. Keep the Admin password private.
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveUsers()"><i class="fa fa-floppy-disk"></i> Save Credentials</button>
+      <button class="btn btn-secondary" onclick="closeManageUsers()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><i class="fa fa-check" id="toast-icon"></i> <span id="toast-msg"></span></div>
+
+<script>
+// ════════════════════════════════════════════════════
+// AUTH SYSTEM — Role-based login
+// ════════════════════════════════════════════════════
+
+// Default credentials (admin changes these in Manage Users)
+const AUTH = {
+  get adminUser() { return localStorage.getItem('dcit_admin_user') || 'admin'; },
+  get adminPass() { return localStorage.getItem('dcit_admin_pass') || 'dcit2026'; },
+  get empPin()    { return localStorage.getItem('dcit_emp_pin')    || '1234'; },
+};
+
+let currentRole = null;   // 'admin' | 'employee'
+let currentUser = null;   // name string
+let loginRoleTab = 'admin';
+
+function selectRole(role) {
+  loginRoleTab = role;
+  document.getElementById('rtab-admin').classList.toggle('active', role === 'admin');
+  document.getElementById('rtab-employee').classList.toggle('active', role === 'employee');
+  document.getElementById('login-admin-fields').style.display = role === 'admin' ? 'block' : 'none';
+  document.getElementById('login-emp-fields').style.display   = role === 'employee' ? 'block' : 'none';
+  document.getElementById('login-error').classList.remove('show');
+}
+
+function doLogin() {
+  const err = document.getElementById('login-error');
+  err.classList.remove('show');
+
+  if (loginRoleTab === 'admin') {
+    const u = document.getElementById('login-username').value.trim();
+    const p = document.getElementById('login-password').value;
+    if (u === AUTH.adminUser && p === AUTH.adminPass) {
+      activateSession('admin', 'Administrator');
+    } else {
+      err.textContent = 'Incorrect username or password.';
+      err.classList.add('show');
+    }
+  } else {
+    const name = document.getElementById('login-emp-name').value.trim();
+    const pin  = document.getElementById('login-emp-pin').value;
+    if (!name) {
+      err.textContent = 'Please enter your full name.';
+      err.classList.add('show');
+      return;
+    }
+    if (pin === AUTH.empPin) {
+      activateSession('employee', name);
+    } else {
+      err.textContent = 'Incorrect PIN. Please ask your admin.';
+      err.classList.add('show');
+    }
+  }
+}
+
+function activateSession(role, name) {
+  currentRole = role;
+  currentUser = name;
+
+  // Hide login screen
+  document.getElementById('login-screen').style.display = 'none';
+
+  // Apply role class to body
+  document.body.classList.remove('is-admin', 'is-employee');
+  document.body.classList.add('is-' + role);
+
+  // Show topbar role badge
+  const badge = document.getElementById('topbar-role');
+  badge.style.display = 'inline-flex';
+  badge.className = 'role-badge ' + role;
+  badge.innerHTML = role === 'admin'
+    ? '<i class="fa fa-shield-halved"></i> Admin'
+    : '<i class="fa fa-user"></i> ' + name;
+
+  document.getElementById('logout-btn').style.display = 'flex';
+
+  // Pre-fill employee name in submit form
+  if (role === 'employee') {
+    const nameField = document.getElementById('emp-name');
+    if (nameField) { nameField.value = name; nameField.readOnly = true; }
+  }
+
+  // Admin: show all. Employee: lock restricted pages
+  applyRoleRestrictions(role);
+
+  showToast('Welcome, ' + name + '! Signed in as ' + role + '.', 'success');
+}
+
+function applyRoleRestrictions(role) {
+  if (role === 'admin') {
+    // Remove any locks
+    document.querySelectorAll('.emp-lock-overlay').forEach(el => el.classList.remove('show'));
+  } else {
+    // Employee: attendance page gets a lock overlay
+    addLockOverlay('page-attendance', 'Attendance management is Admin only.');
+    addLockOverlay('page-ceo',        'CEO Dashboard is Admin only.');
+    addLockOverlay('page-history',    'Report History is Admin only.');
+    addLockOverlay('page-settings',   'Settings are Admin only.');
+  }
+}
+
+function addLockOverlay(pageId, msg) {
+  const page = document.getElementById(pageId);
+  if (!page) return;
+  page.style.position = 'relative';
+  const ov = document.createElement('div');
+  ov.className = 'emp-lock-overlay show';
+  ov.innerHTML = `<div class="emp-lock-msg">
+    <i class="fa fa-lock"></i>
+    <p><strong>Access Restricted</strong><br>${msg}</p>
+  </div>`;
+  page.appendChild(ov);
+}
+
+function doLogout() {
+  currentRole = null; currentUser = null;
+  document.body.classList.remove('is-admin', 'is-employee');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('topbar-role').style.display  = 'none';
+  document.getElementById('logout-btn').style.display   = 'none';
+  // Clear login fields
+  ['login-username','login-password','login-emp-name','login-emp-pin'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('login-error').classList.remove('show');
+}
+
+// Manage Users modal
+function openManageUsers() {
+  document.getElementById('mu-admin-user').value = AUTH.adminUser;
+  document.getElementById('mu-admin-pass').value = '';
+  document.getElementById('mu-emp-pin').value    = '';
+  document.getElementById('manageUsersModal').classList.add('show');
+}
+function closeManageUsers() {
+  document.getElementById('manageUsersModal').classList.remove('show');
+}
+function saveUsers() {
+  const u = document.getElementById('mu-admin-user').value.trim();
+  const p = document.getElementById('mu-admin-pass').value;
+  const pin = document.getElementById('mu-emp-pin').value.trim();
+  if (u) localStorage.setItem('dcit_admin_user', u);
+  if (p) localStorage.setItem('dcit_admin_pass', p);
+  if (pin) localStorage.setItem('dcit_emp_pin', pin);
+  closeManageUsers();
+  showToast('Credentials updated ✓', 'success');
+}
+
+// Guard: block keyboard shortcuts to access admin pages
+document.addEventListener('keydown', e => {
+  if (currentRole === 'employee' && e.altKey) e.preventDefault();
+});
+
+// ════════════════════════════════════════════════════
+// CONFIGURATION
+// ════════════════════════════════════════════════════
+let WEB_APP_URL = localStorage.getItem('dcit_url') || '';
+let SHEET_URL = localStorage.getItem('dcit_sheet') || '';
+let CEO_EMAIL = localStorage.getItem('dcit_email') || '';
+let ADMIN_EMAIL = localStorage.getItem('dcit_admin_email') || '';
+let TASK_PASSWORD = localStorage.getItem('dcit_task_password') || '123456';
+
+// ════════════════════════════════════════════════════
+// DEPARTMENTS
+// ════════════════════════════════════════════════════
+const departments = [
+  { id: 1, name: 'Graphics Design', icon: '🎨', count: 0 },
+  { id: 2, name: 'IT Support Service', icon: '💻', count: 0 },
+  { id: 3, name: 'English for Work', icon: '📚', count: 0 },
+  { id: 4, name: 'Tour Guiding', icon: '🗺️', count: 0 },
+  { id: 5, name: 'Hand Stitching', icon: '🪡', count: 0 }
+];
+
+// ════════════════════════════════════════════════════
+// STAFF LIST
+// ════════════════════════════════════════════════════
+const staff = [
+  { id: 1, name: 'Nayeem Islam', status: 'present', arrivalTime: '08:30', absenceReason: '' },
+  { id: 2, name: 'Tahmina Akter', status: 'absent', arrivalTime: '', absenceReason: 'Sickness' },
+  { id: 3, name: 'Nuri Jannat', status: 'present', arrivalTime: '08:45', absenceReason: '' },
+  { id: 4, name: 'MD Raihan', status: 'present', arrivalTime: '09:00', absenceReason: '' },
+  { id: 5, name: 'Sumaiya Akter', status: 'late', arrivalTime: '09:30', absenceReason: '' },
+  { id: 6, name: 'Md Ruhin Ahmed', status: 'present', arrivalTime: '08:30', absenceReason: '' },
+  { id: 7, name: 'Md. Bhubon', status: 'late', arrivalTime: '09:45', absenceReason: '' },
+  { id: 8, name: 'Md. Shawn', status: 'late', arrivalTime: '09:15', absenceReason: '' },
+  { id: 9, name: 'Samiul Hoque', status: 'late', arrivalTime: '10:00', absenceReason: '' },
+  { id: 10, name: 'Md. Tushar Abdullah', status: 'late', arrivalTime: '09:20', absenceReason: '' },
+  { id: 11, name: 'Rafia Akter', status: 'late', arrivalTime: '09:50', absenceReason: '' },
+  { id: 12, name: 'Md. Remel', status: 'late', arrivalTime: '10:10', absenceReason: '' },
+  { id: 13, name: 'Tasmin Jahan', status: 'late', arrivalTime: '09:35', absenceReason: '' },
+  { id: 14, name: 'Zannatul Magferati', status: 'late', arrivalTime: '10:05', absenceReason: '' },
+  { id: 15, name: 'Maria Sultana', status: 'late', arrivalTime: '09:55', absenceReason: '' },
+  { id: 16, name: 'Pia Akter', status: 'late', arrivalTime: '10:15', absenceReason: '' },
+  { id: 17, name: 'Rup Kumar Bharati', status: 'late', arrivalTime: '09:40', absenceReason: '' },
+  { id: 18, name: 'Md. Ashikul Islam', status: 'late', arrivalTime: '10:00', absenceReason: '' },
+  { id: 19, name: 'Md. Rownak Rashedin', status: 'late', arrivalTime: '09:25', absenceReason: '' },
+  { id: 20, name: 'Md Anwar Hossain', status: 'late', arrivalTime: '10:20', absenceReason: '' },
+  { id: 21, name: 'Md Raizul Islam', status: 'late', arrivalTime: '09:30', absenceReason: '' }
+];
+
+let currentStaffEditing = null;
+
+// ════════════════════════════════════════════════════
+// DATA STORES
+// ════════════════════════════════════════════════════
+let localReports = JSON.parse(localStorage.getItem('dcit_reports') || '[]');
+let localTasks = JSON.parse(localStorage.getItem('dcit_tasks') || '[]');
+let departmentCounts = JSON.parse(localStorage.getItem('dcit_dept_counts') || JSON.stringify(departments.map(d => ({ id: d.id, count: 0 }))));
+
+// ════════════════════════════════════════════════════
+// PAGE NAVIGATION
+// ════════════════════════════════════════════════════
+const ADMIN_PAGES = ['attendance', 'history', 'ceo', 'settings'];
+
+function gotoPage(page) {
+  // Block employee from admin pages
+  if (currentRole === 'employee' && ADMIN_PAGES.includes(page)) {
+    showToast('This section is for Admins only.', 'error');
+    return;
+  }
+
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.topnav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+
+  document.getElementById('page-' + page).classList.add('active');
+  const sideEl = document.getElementById('side-' + page);
+  if (sideEl) sideEl.classList.add('active');
+
+  if (page === 'dashboard') { buildDepartmentDashboard(); updateActivityFeed(); }
+  if (page === 'ceo') initCeoCharts();
+  if (page === 'history') renderHistory();
+  if (page === 'settings') loadSettings();
+  if (page === 'submit') checkConnection();
+  if (page === 'attendance') { buildStaffGrid(); buildDepartmentAttendance(); }
+  if (page === 'tasks') { renderTasks(); updateShareLink(); }
+}
+
+// ════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════
+function buildDepartmentDashboard() {
+  const container = document.getElementById('dept-grid-dashboard');
+  container.innerHTML = departments.map(dept => {
+    const deptData = departmentCounts.find(d => d.id === dept.id) || { count: 0 };
+    return `<div class="dept-card">
+      <div class="dept-icon">${dept.icon}</div>
+      <div class="dept-name">${dept.name}</div>
+      <div class="dept-count">${deptData.count}</div>
+    </div>`;
+  }).join('');
+
+  const total = departmentCounts.reduce((sum, d) => sum + d.count, 0);
+  document.getElementById('m-students').textContent = total;
+  document.getElementById('ceo-students').textContent = total;
+}
+
+function updateActivityFeed() {
+  const feed = document.getElementById('activity-feed');
+  const recentReports = localReports.slice(0, 5);
+  
+  if (recentReports.length === 0) {
+    feed.innerHTML = '<p style="color:var(--text-3);font-size:13px;">No recent activity yet.</p>';
+    return;
+  }
+
+  feed.innerHTML = recentReports.map(r => `
+    <div class="insight-row">
+      <div class="insight-icon" style="background:var(--blue-light);color:var(--blue);"><i class="fa fa-file-check"></i></div>
+      <div>
+        <div class="insight-text">Report from <strong>${r.employeeName}</strong></div>
+        <div class="insight-time">${new Date(r.timestamp).toLocaleTimeString()}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════════════════
+// SUBMIT REPORT
+// ════════════════════════════════════════════════════
+async function submitReport() {
+  const name = document.getElementById('emp-name').value.trim();
+  if (!name) { showToast('Please enter your name', 'error'); return; }
+
+  const payload = {
+    action: 'submitReport',
+    employeeName: name,
+    role: document.getElementById('emp-role').value,
+    shift: document.getElementById('emp-shift').value,
+    date: document.getElementById('rep-date').value || todayStr(),
+    assignedBy: document.getElementById('assigned-by').value.trim(),
+    assignedByRole: document.getElementById('assigned-by-role').value.trim(),
+    assignmentNotes: document.getElementById('assignment-notes').value,
+    studentComm: document.getElementById('w-student').value || 0,
+    fCommerce: document.getElementById('w-fcommerce').value || 0,
+    social: document.getElementById('w-social').value || 0,
+    forms: document.getElementById('w-forms').value || 0,
+    officeMisc: document.getElementById('w-misc').value,
+    notes: document.getElementById('w-notes').value,
+    status: document.getElementById('rep-status').value,
+    tomorrow: document.getElementById('rep-tomorrow').value,
+    timestamp: new Date().toISOString()
+  };
+
+  localReports.unshift(payload);
+  localStorage.setItem('dcit_reports', JSON.stringify(localReports));
+  updateMetrics();
+  updateActivityFeed();
+
+  const btn = document.getElementById('submit-btn');
+  btn.innerHTML = '<span class="spinner"></span> Submitting...';
+  btn.disabled = true;
+
+  if (WEB_APP_URL) {
+    try {
+      // BUG 3 FIX: mode no-cors required for Google Apps Script
+      await fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      });
+      showToast('Report submitted & saved to Google Sheets ✓', 'success');
+    } catch (err) {
+      showToast('Saved locally. Sheet sync failed — check URL in Settings.', 'info');
+    }
+  } else {
+    showToast('Report saved locally. Connect Google Sheets in Settings.', 'info');
+  }
+
+  btn.innerHTML = '<i class="fa fa-paper-plane"></i> Submit Report';
+  btn.disabled = false;
+  clearForm();
+  setTimeout(() => gotoPage('history'), 1200);
+}
+
+function clearForm() {
+  ['emp-name', 'assigned-by', 'assigned-by-role', 'assignment-notes', 'w-student', 'w-fcommerce', 'w-social', 'w-forms', 'w-misc', 'w-notes', 'rep-tomorrow']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+}
+
+// ════════════════════════════════════════════════════
+// ATTENDANCE
+// ════════════════════════════════════════════════════
+function buildStaffGrid() {
+  const grid = document.getElementById('staff-grid');
+  grid.innerHTML = '';
+  staff.forEach(s => {
+    const cell = document.createElement('div');
+    cell.className = 'attend-cell ' + s.status;
+    const timeDisplay = s.arrivalTime ? `<div class="attend-time">${s.arrivalTime}</div>` : '';
+    const reasonDisplay = s.absenceReason ? `<div class="attend-reason">${s.absenceReason}</div>` : '';
+    cell.innerHTML = `<div class="attend-name">${s.name}</div>${timeDisplay}${reasonDisplay}<div class="attend-status">${s.status}</div>`;
+    cell.onclick = () => {
+      currentStaffEditing = s;
+      openStaffModal(s);
+    };
+    grid.appendChild(cell);
+  });
+  updateStaffBadge();
+}
+
+function openStaffModal(staffMember) {
+  document.getElementById('staffModalTitle').textContent = `Update Status — ${staffMember.name}`;
+  document.getElementById('staffStatus').value = staffMember.status;
+  document.getElementById('staffTime').value = staffMember.arrivalTime || '';
+  document.getElementById('absenceReason').value = staffMember.absenceReason || '';
+  
+  const absenceGroup = document.getElementById('absenceReasonGroup');
+  absenceGroup.style.display = staffMember.status === 'absent' ? 'block' : 'none';
+  
+  document.getElementById('staffStatus').onchange = function() {
+    absenceGroup.style.display = this.value === 'absent' ? 'block' : 'none';
+  };
+  
+  document.getElementById('staffModal').classList.add('show');
+}
+
+function closeStaffModal() {
+  document.getElementById('staffModal').classList.remove('show');
+  currentStaffEditing = null;
+}
+
+function saveStaffModal() {
+  if (!currentStaffEditing) return;
+  
+  currentStaffEditing.status = document.getElementById('staffStatus').value;
+  currentStaffEditing.arrivalTime = document.getElementById('staffTime').value;
+  currentStaffEditing.absenceReason = currentStaffEditing.status === 'absent' ? document.getElementById('absenceReason').value : '';
+  
+  buildStaffGrid();
+  closeStaffModal();
+  updateMetrics();
+}
+
+function updateStaffBadge() {
+  const present = staff.filter(s => s.status === 'present').length;
+  document.getElementById('staff-count-badge').textContent = present + ' / ' + staff.length + ' present';
+  const pct = Math.round((present / staff.length) * 100);
+  document.getElementById('m-staff').textContent = present + '/' + staff.length;
+  document.getElementById('staff-percentage').textContent = pct + '% attendance';
+  document.getElementById('ceo-staff').textContent = present + '/' + staff.length;
+  document.getElementById('ceo-staff-pct').textContent = pct + '%';
+}
+
+function buildDepartmentAttendance() {
+  const container = document.getElementById('dept-grid-attendance');
+  container.innerHTML = departments.map(dept => {
+    const deptData = departmentCounts.find(d => d.id === dept.id) || { count: 0 };
+    return `<div class="dept-card">
+      <div class="dept-icon">${dept.icon}</div>
+      <div class="dept-name">${dept.name}</div>
+      <input type="number" class="dept-input" min="0" value="${deptData.count}" onchange="updateDepartmentCount(${dept.id}, this.value)" />
+    </div>`;
+  }).join('');
+}
+
+function updateDepartmentCount(deptId, count) {
+  const deptData = departmentCounts.find(d => d.id === deptId);
+  if (deptData) deptData.count = parseInt(count) || 0;
+  localStorage.setItem('dcit_dept_counts', JSON.stringify(departmentCounts));
+  const total = departmentCounts.reduce((sum, d) => sum + d.count, 0);
+  document.getElementById('m-students').textContent = total;
+  document.getElementById('ceo-students').textContent = total;
+}
+
+async function saveAttendance() {
+  const btn = document.getElementById('att-save-btn');
+  btn.innerHTML = '<span class="spinner"></span> Saving...';
+  btn.disabled = true;
+
+  const payload = {
+    action: 'submitAttend',
+    date: document.getElementById('att-date').value || todayStr(),
+    records: staff.map(s => ({
+      name:        s.name,
+      status:      s.status,
+      arrivalTime: s.arrivalTime   || '',
+      // BUG 1 FIX: Apps Script reads r.remarks but HTML was sending absenceReason only
+      remarks:     s.absenceReason || ''
+    }))
+  };
+
+  if (WEB_APP_URL) {
+    try {
+      // BUG 3 FIX: Google Apps Script requires mode:'no-cors' and Content-Type text/plain
+      await fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      });
+      showToast('Attendance saved to Google Sheets ✓', 'success');
+    } catch (err) {
+      showToast('Sync failed — check Web App URL in Settings.', 'error');
+    }
+  } else {
+    showToast('Not connected. Add Web App URL in Settings first.', 'info');
+  }
+
+  btn.innerHTML = '<i class="fa fa-floppy-disk"></i> Save to Google Sheet';
+  btn.disabled = false;
+}
+
+async function saveStudentCount() {
+  // BUG 2 FIX: was sending departmentCounts array but Apps Script expected d.count (single number)
+  // Now we send each department as a separate row AND also send the total
+  const total = departmentCounts.reduce((sum, d) => sum + d.count, 0);
+  const batch   = document.getElementById('stu-batch').value;
+  const remarks = document.getElementById('stu-remarks').value;
+  const date    = document.getElementById('stu-date').value || todayStr();
+
+  // Build one payload per department (Apps Script saves each as a row)
+  const payload = {
+    action: 'submitStudents',
+    date:    date,
+    batch:   batch,
+    remarks: remarks,
+    count:   total,                   // total for backward compat
+    departmentRows: departmentCounts.map(d => {
+      const dept = departments.find(dep => dep.id === d.id);
+      return { name: dept ? dept.name : 'Dept ' + d.id, count: d.count };
+    })
+  };
+
+  if (WEB_APP_URL) {
+    try {
+      await fetch(WEB_APP_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      });
+      showToast('Student counts saved to Google Sheets ✓', 'success');
+    } catch (err) {
+      showToast('Sync failed — check Web App URL in Settings.', 'error');
+    }
+  } else {
+    showToast('Not connected. Add Web App URL in Settings first.', 'info');
+  }
+}
+
+// ════════════════════════════════════════════════════
+// TASKS
+// ════════════════════════════════════════════════════
+function openCreateTaskModal() {
+  document.getElementById('taskModal').classList.add('show');
+}
+
+function closeCreateTaskModal() {
+  document.getElementById('taskModal').classList.remove('show');
+  ['task-password', 'task-title', 'task-assigned-to', 'task-form-link', 'task-website-link', 'task-drive-link', 'task-description'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+function createTask() {
+  const password = document.getElementById('task-password').value;
+  if (password !== TASK_PASSWORD) {
+    showToast('Incorrect password', 'error');
+    return;
+  }
+
+  const title = document.getElementById('task-title').value.trim();
+  if (!title) {
+    showToast('Please enter a task title', 'error');
+    return;
+  }
+
+  const task = {
+    id: Date.now(),
+    title: title,
+    assignedTo: document.getElementById('task-assigned-to').value.trim(),
+    formLink: document.getElementById('task-form-link').value.trim(),
+    websiteLink: document.getElementById('task-website-link').value.trim(),
+    driveLink: document.getElementById('task-drive-link').value.trim(),
+    description: document.getElementById('task-description').value.trim(),
+    date: todayStr(),
+    createdAt: new Date().toISOString(),
+    status: 'active'
+  };
+
+  localTasks.unshift(task);
+  localStorage.setItem('dcit_tasks', JSON.stringify(localTasks));
+  renderTasks();
+  updateMetrics();
+  closeCreateTaskModal();
+  showToast('Task created ✓', 'success');
+}
+
+function renderTasks() {
+  const container = document.getElementById('tasks-container');
+  const todayTasks = localTasks.filter(t => t.date === todayStr() && t.status === 'active');
+
+  if (todayTasks.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-3);font-size:13px;text-align:center;padding:20px;">No tasks for today. <a href="#" onclick="openCreateTaskModal();return false;">Create one</a></p>';
+    return;
+  }
+
+  container.innerHTML = todayTasks.map(task => {
+    let linksHTML = '';
+    if (task.formLink) linksHTML += `<a href="${task.formLink}" target="_blank" class="task-link-btn"><i class="fa fa-forms"></i> Form</a>`;
+    if (task.websiteLink) linksHTML += `<a href="${task.websiteLink}" target="_blank" class="task-link-btn"><i class="fa fa-globe"></i> Website</a>`;
+    if (task.driveLink) linksHTML += `<a href="${task.driveLink}" target="_blank" class="task-link-btn"><i class="fa fa-drive"></i> Drive</a>`;
+
+    return `<div class="task-card">
+      <div class="task-info">
+        <div class="task-title">${task.title}</div>
+        ${task.assignedTo ? `<div class="task-assigned"><i class="fa fa-user"></i> Assigned to: ${task.assignedTo}</div>` : ''}
+        ${task.description ? `<div class="task-assigned">${task.description}</div>` : ''}
+        ${linksHTML ? `<div class="task-links">${linksHTML}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('m-tasks').textContent = todayTasks.length;
+  document.getElementById('ceo-tasks').textContent = todayTasks.length;
+}
+
+function updateShareLink() {
+  const shareLink = window.location.href.split('?')[0] + '?view=tasks';
+  document.getElementById('share-link').value = shareLink;
+}
+
+// ════════════════════════════════════════════════════
+// HISTORY
+// ════════════════════════════════════════════════════
+function renderHistory(filter = '') {
+  const tbody = document.getElementById('history-tbody');
+  const rows = localReports.filter(r =>
+    !filter || r.employeeName.toLowerCase().includes(filter.toLowerCase())
+  );
+
+  if (rows.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:20px;color:var(--text-3);">No reports found</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const cls = r.status === 'Completed' ? 'badge-green' :
+                r.status === 'In Progress' ? 'badge-amber' : 'badge-red';
+    return `<tr>
+      <td>${r.date}</td>
+      <td>${r.employeeName}</td>
+      <td>${(r.role || '').split(' ')[0]}</td>
+      <td>${r.assignedBy || '—'}</td>
+      <td>${r.studentComm || 0}</td>
+      <td>${r.fCommerce || 0}</td>
+      <td>${r.social || 0}</td>
+      <td>${r.forms || 0}</td>
+      <td><span class="badge ${cls}">${r.status}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterHistory() {
+  renderHistory(document.getElementById('history-search').value);
+}
+
+// ════════════════════════════════════════════════════
+// CEO CHARTS
+// ════════════════════════════════════════════════════
+let chartsReady = { daily: false, weekly: false, monthly: false };
+
+function switchCeoTab(tab) {
+  ['daily', 'weekly', 'monthly'].forEach(t => {
+    document.getElementById('ceo-' + t).style.display = t === tab ? 'block' : 'none';
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+  initCeoCharts(tab);
+}
+
+function initCeoCharts(tab = 'daily') {
+  if (tab === 'daily' && !chartsReady.daily) {
+    chartsReady.daily = true;
+    setTimeout(() => {
+      const ctx = document.getElementById('chart-dept-bar');
+      if (ctx && window.Chart) {
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: departments.map(d => d.name),
+            datasets: [{
+              label: 'Students',
+              data: departmentCounts.map(d => d.count),
+              backgroundColor: ['#185FA5', '#1D9E75', '#BA7517', '#7C3AED', '#E91E63'],
+              borderRadius: 5,
+              borderSkipped: false
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: true } },
+            scales: {
+              y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+    }, 100);
+  }
+
+  const highlights = document.getElementById('ceo-highlights');
+  if (highlights) {
+    highlights.innerHTML = `
+      <div class="insight-row">
+        <div class="insight-icon" style="background:var(--green-light);color:var(--green);"><i class="fa fa-check"></i></div>
+        <div><div class="insight-text">${staff.filter(s => s.status === 'present').length} staff present today</div></div>
+      </div>
+      <div class="insight-row">
+        <div class="insight-icon" style="background:var(--amber-light);color:var(--amber);"><i class="fa fa-clock"></i></div>
+        <div><div class="insight-text">${staff.filter(s => s.status === 'late').length} staff arrived late</div></div>
+      </div>
+      <div class="insight-row">
+        <div class="insight-icon" style="background:var(--purple-light);color:var(--purple);"><i class="fa fa-tasks"></i></div>
+        <div><div class="insight-text">${localTasks.filter(t => t.date === todayStr()).length} active tasks today</div></div>
+      </div>
+    `;
+  }
+}
+
+// ════════════════════════════════════════════════════
+// SETTINGS
+// ════════════════════════════════════════════════════
+function loadSettings() {
+  document.getElementById('settings-url').value = WEB_APP_URL;
+  document.getElementById('settings-sheet').value = SHEET_URL;
+  document.getElementById('settings-email').value = CEO_EMAIL;
+  document.getElementById('settings-admin-email').value = ADMIN_EMAIL;
+  document.getElementById('settings-task-password').value = TASK_PASSWORD;
+}
+
+function saveSettings() {
+  WEB_APP_URL = document.getElementById('settings-url').value.trim();
+  SHEET_URL = document.getElementById('settings-sheet').value.trim();
+  CEO_EMAIL = document.getElementById('settings-email').value.trim();
+  ADMIN_EMAIL = document.getElementById('settings-admin-email').value.trim();
+  TASK_PASSWORD = document.getElementById('settings-task-password').value || '123456';
+
+  localStorage.setItem('dcit_url', WEB_APP_URL);
+  localStorage.setItem('dcit_sheet', SHEET_URL);
+  localStorage.setItem('dcit_email', CEO_EMAIL);
+  localStorage.setItem('dcit_admin_email', ADMIN_EMAIL);
+  localStorage.setItem('dcit_task_password', TASK_PASSWORD);
+
+  showToast('Settings saved ✓', 'success');
+}
+
+async function testConnection() {
+  if (!WEB_APP_URL) {
+    showToast('Please enter a Web App URL first', 'error');
+    return;
+  }
+  showToast('Testing connection...', 'info');
+  try {
+    const res = await fetch(WEB_APP_URL + '?action=ping');
+    const data = await res.json();
+    if (data.status === 'ok') showToast('Connection successful ✓', 'success');
+    else showToast('Connected but unexpected response', 'info');
+  } catch {
+    showToast('Connection failed — check the URL', 'error');
+  }
+}
+
+function checkConnection() {
+  const warn = document.getElementById('submit-connect-warn');
+  warn.style.display = WEB_APP_URL ? 'none' : 'flex';
+}
+
+// ════════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════════
+function todayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function updateMetrics() {
+  document.getElementById('m-reports').textContent = localReports.length;
+  document.getElementById('ceo-reports').textContent = localReports.length;
+  renderTasks();
+}
+
+function openGoogleSheet() {
+  if (SHEET_URL) window.open(SHEET_URL, '_blank');
+  else showToast('Add your Sheet URL in Settings first', 'info');
+}
+
+function exportCSV() {
+  if (localReports.length === 0) {
+    showToast('No reports to export', 'info');
+    return;
+  }
+
+  const headers = ['Date', 'Employee', 'Role', 'Assigned By', 'Assigned By Role', 'Student Comm', 'F-Commerce', 'Social', 'Forms', 'Status'];
+  const rows = localReports.map(r => [
+    r.date, r.employeeName, r.role, r.assignedBy, r.assignedByRole,
+    r.studentComm, r.fCommerce, r.social, r.forms, r.status
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(v => '"' + (v || '') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'DCIT_Reports_' + todayStr() + '.csv';
+  a.click();
+  showToast('CSV exported ✓', 'success');
+}
+
+function showToast(msg, type = 'success') {
+  const toast = document.getElementById('toast');
+  const icon = document.getElementById('toast-icon');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.className = 'toast ' + type + ' show';
+  icon.className = type === 'success' ? 'fa fa-check' :
+    type === 'error' ? 'fa fa-xmark' : 'fa fa-info';
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+document.getElementById('rep-date').value = todayStr();
+document.getElementById('att-date').value = todayStr();
+document.getElementById('stu-date').value = todayStr();
+
+document.getElementById('topbar-date').textContent =
+  new Date().toLocaleDateString('en-BD', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+document.getElementById('dash-date-label').textContent =
+  new Date().toLocaleDateString('en-BD', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+buildStaffGrid();
+buildDepartmentDashboard();
+updateMetrics();
+renderHistory();
+renderTasks();
+</script>
+</body>
+</html>
