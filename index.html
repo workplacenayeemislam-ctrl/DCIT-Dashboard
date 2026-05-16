@@ -1043,50 +1043,51 @@ function renderAttSummary() {
 // SUBMIT REPORT
 // ════════════════════════════════════════════════════════
 async function submitReport() {
-  const name = document.getElementById('emp-name').value.trim();
-  if (!name) { showToast('Please enter your name', 'error'); return; }
 
-  const payload = {
-    action: 'submitReport',
-    date: document.getElementById('rep-date').value || todayStr(),
-    employeeName: name,
-    role: document.getElementById('emp-role').value,
-    shift: document.getElementById('emp-shift').value,
-    assignedBy: document.getElementById('assigned-by').value.trim(),
-    assignedByRole: document.getElementById('assigned-by-role').value.trim(),
-    assignmentNotes: document.getElementById('assignment-notes').value,
-    studentComm: document.getElementById('w-student').value || 0,
-    fCommerce: document.getElementById('w-fcommerce').value || 0,
-    social: document.getElementById('w-social').value || 0,
-    forms: document.getElementById('w-forms').value || 0,
-    officeMisc: document.getElementById('w-misc').value,
-    notes: document.getElementById('w-notes').value,
-    status: document.getElementById('rep-status').value,
-    tomorrow: document.getElementById('rep-tomorrow').value,
-    timestamp: new Date().toISOString()
-  };
+  const WEBAPP_URL = localStorage.getItem('dcit_webapp');
 
-  // Save locally
-  localReports.unshift(payload);
-  localStorage.setItem('dcit_reports', JSON.stringify(localReports));
-  updateMetrics();
-
-  const btn = document.getElementById('submit-btn');
-  btn.innerHTML = '<span class="spinner"></span> Submitting...';
-  btn.disabled = true;
-
-  if (WEB_APP_URL) {
-    const res = await callSheet(payload);
-    showToast(res ? 'Report saved to Google Sheets ✓' : 'Saved locally. Sheet sync failed.', res ? 'success' : 'info');
-  } else {
-    showToast('Saved locally. Connect Google Sheets in Settings.', 'info');
+  if (!WEBAPP_URL) {
+    alert("Please add Apps Script URL in Settings");
+    return;
   }
 
-  btn.innerHTML = '<i class="fa fa-paper-plane"></i> Submit Report';
-  btn.disabled = false;
-  clearReportForm();
-  setTimeout(() => gotoPage('history'), 1200);
+  const payload = {
+    action: "submitReport",
+    name: document.getElementById('emp-name').value,
+    role: document.getElementById('emp-role').value,
+    date: document.getElementById('rep-date').value,
+    shift: document.getElementById('emp-shift').value,
+    assignedBy: document.getElementById('assigned-by').value,
+    assignedRole: document.getElementById('assigned-by-role').value,
+    notes: document.getElementById('w-notes').value,
+    students: document.getElementById('w-student').value,
+    fcommerce: document.getElementById('w-fcommerce').value,
+    social: document.getElementById('w-social').value,
+    forms: document.getElementById('w-forms').value,
+    misc: document.getElementById('w-misc').value,
+    status: document.getElementById('rep-status').value
+  };
+
+  try {
+
+    const response = await fetch(WEBAPP_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+
+    alert(result.message);
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("Connection failed");
+
+  }
 }
+    
 
 function clearReportForm() {
   ['emp-name','assigned-by','assigned-by-role','assignment-notes','w-student','w-fcommerce','w-social','w-forms','w-misc','w-notes','rep-tomorrow']
@@ -1548,17 +1549,14 @@ function loadSettings() {
   document.getElementById('settings-admin-email').value  = ADMIN_EMAIL;
 }
 
-function saveSettings() {
-  WEB_APP_URL  = document.getElementById('settings-url').value.trim();
-  SHEET_URL    = document.getElementById('settings-sheet').value.trim();
-  CEO_EMAIL    = document.getElementById('settings-email').value.trim();
-  ADMIN_EMAIL  = document.getElementById('settings-admin-email').value.trim();
-  localStorage.setItem('dcit_url',         WEB_APP_URL);
-  localStorage.setItem('dcit_sheet',       SHEET_URL);
-  localStorage.setItem('dcit_email',       CEO_EMAIL);
-  localStorage.setItem('dcit_admin_email', ADMIN_EMAIL);
-  setSyncStatus(WEB_APP_URL ? 'synced' : 'error');
-  showToast('Settings saved ✓', 'success');
+function saveSettings() {git commit -m "Connected Google Apps Script backend"git commit -m "Connected Google Apps Script backend"
+
+  const url = document.getElementById('settings-url').value;
+
+  localStorage.setItem('dcit_webapp', url);
+
+  alert("Settings Saved Successfully");
+
 }
 
 async function testConnection() {
